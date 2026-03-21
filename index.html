@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="DMPO: Dispersive MeanFlow Policy Optimization - One Step Is Enough for Real-Time Robotic Control">
+    <title>DMPO: Dispersive MeanFlow Policy Optimization</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Avenir, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: black;
+            background-color: #ffffff;
+            padding-top: 45px;
+        }
+
+        /* Gradient Animation */
+        @keyframes gradient-shift {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        @keyframes pulse-glow {
+
+            0%,
+            100% {
+                box-shadow: 0 0 20px rgba(65, 105, 225, 0.3);
+            }
+
+            50% {
+                box-shadow: 0 0 30px rgba(255, 69, 0, 0.4);
+            }
+        }
+
+        .container {
+            max-width: 975px;
+            margin: 0 auto;
+            padding: 0 22px;
+        }
+
+        header {
+            background: #ffffff;
+            color: #333;
+            padding: 30px 20px 22px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 0.5rem;
+            font-weight: 800;
+            line-height: 1.125;
+            max-width: 975px;
+            margin-left: auto;
+            margin-right: auto;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 30%, #f093fb 70%, #f5576c 100%);
+            background-size: 300% 100%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradient-shift 5s ease infinite;
+        }
+
+        @media (max-width: 1100px) {
+            h1 {
+                font-size: 2.4em;
+            }
+        }
+
+        @media (max-width: 900px) {
+            h1 {
+                font-size: 2em;
+            }
+        }
+
+        .subtitle {
+            font-size: 2.2em;
+            margin-bottom: 1.5rem;
+            color: #363636;
+            font-weight: 700;
+            line-height: 1.125;
+        }
+
+        .authors {
+            font-size: 22px;
+            margin-top: 1.5rem;
+            margin-bottom: 0.85rem;
+            line-height: 1.6;
+            color: black;
+            font-weight: 500;
+        }
+
+        .authors a {
+            color: black;
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        .authors a:hover {
+            color: #4169E1;
+        }
+
+        .affiliation {
+            font-size: 19px;
+            color: black;
+            margin-bottom: 1.8rem;
+            line-height: 1.6;
+        }
+
+        .author-block {
+            display: inline;
+        }
+
+        .link-block {
+            display: inline-block;
+        }
+
+        .links {
+            margin-top: 1.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 0.75rem;
+            max-width: 975px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5em 1em;
+            background: #363636;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 290486px;
+            font-weight: 400;
+            font-size: 1rem;
+            border: 1px solid transparent;
+            white-space: nowrap;
+            transition: all 0.2s ease;
+            line-height: 1.5;
+            gap: 0.5em;
+        }
+
+        .btn:hover {
+            background-color: #292929;
+            color: #fff;
+        }
+
+        .btn .icon {
+            font-size: 1.1em;
+            line-height: 1;
+        }
+
+        /* Video Section */
+        .hero-video {
+            background: #ffffff;
+            padding: 30px 22px;
+            text-align: center;
+        }
+
+        .hero-video .container {
+            position: relative;
+        }
+
+        .video-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 975px;
+            margin: 0 auto;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+            animation: pulse-glow 3s ease-in-out infinite;
+        }
+
+        .video-wrapper iframe {
+            width: 100%;
+            height: 548px;
+            border: none;
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .video-wrapper iframe {
+                height: 300px;
+            }
+        }
+
+        /* Gradient Divider */
+        .gradient-divider {
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #b0b0b0 30%, #b0b0b0 70%, transparent);
+            margin: 0 auto;
+            border: none;
+            box-shadow: 0 1px 0 rgba(0, 0, 0, 0.05);
+            width: 60%;
+            max-width: 600px;
+        }
+
+        /* Section Styles */
+        .section {
+            background: transparent;
+            padding: 30px 22px;
+        }
+
+        .section-alternate {
+            background: rgb(235, 235, 235);
+            background: linear-gradient(180deg, rgba(235, 235, 235, 0.3) 0%, rgba(235, 235, 235, 1) 50%, rgba(235, 235, 235, 0.3) 100%);
+            padding: 30px 22px;
+        }
+
+        .section-white {
+            background-color: #ffffff;
+            padding: 30px 22px;
+        }
+
+        h2 {
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            color: black;
+            font-weight: 700;
+            line-height: 1.125;
+            text-align: center;
+        }
+
+        h3 {
+            font-size: 1.5rem;
+            margin: 2rem 0 1rem 0;
+            color: black;
+            font-weight: 600;
+            line-height: 1.125;
+        }
+
+        .content {
+            line-height: 1.7;
+            font-size: 16px;
+            color: black;
+        }
+
+        .tldr {
+            background: #f5f5f5;
+            padding: 25px;
+            border-radius: 6px;
+            border-left: 4px solid #4169E1;
+            margin: 20px 0;
+            font-size: 1rem;
+            line-height: 1.7;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .highlight {
+            background: linear-gradient(90deg, #FFD700, #FFA500);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: 700;
+            color: #000;
+        }
+
+        .research-question {
+            color: #c7254e;
+            font-weight: 700;
+            font-size: 1.15em;
+            margin: 25px 0 15px 0;
+            padding: 18px 22px;
+            background: linear-gradient(135deg, #fff5f5 0%, #ffe5e5 100%);
+            border-left: 4px solid #c7254e;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(199, 37, 78, 0.1);
+        }
+
+        .media-container {
+            margin: 30px 0;
+            text-align: center;
+        }
+
+        .media-container img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .media-container img:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+        }
+
+        .media-container video {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        }
+
+        .caption {
+            margin-top: 15px;
+            font-style: normal;
+            color: #666;
+            font-size: 0.95em;
+            line-height: 1.6;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .card {
+            background: #ffffff;
+            padding: 16px;
+            border-radius: 8px;
+            border: 2px solid #e9ecef;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .card p {
+            margin: 0.4rem 0;
+            font-size: 0.92rem;
+            line-height: 1.4;
+        }
+
+        .card:hover {
+            border-color: #4169E1;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(65, 105, 225, 0.2);
+        }
+
+        .card h3 {
+            margin-top: 0;
+            color: black;
+            font-size: 1.05rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .approach-list {
+            list-style: none;
+            margin: 20px 0 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .approach-item {
+            background: #ffffff;
+            border: 1px solid #dfe5ec;
+            border-left: 4px solid #2f5ea8;
+            border-radius: 10px;
+            padding: 16px 18px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+        }
+
+        .approach-item h3 {
+            margin: 0 0 8px;
+            font-size: 1.1rem;
+            color: #111;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .approach-number {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #2f5ea8;
+            color: #fff;
+            font-size: 0.85rem;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .approach-item p {
+            margin: 0;
+            color: #1f1f1f;
+            font-size: 0.96rem;
+            line-height: 1.65;
+        }
+
+        ul {
+            margin-left: 20px;
+            margin-top: 10px;
+        }
+
+        li {
+            margin: 10px 0;
+            line-height: 1.7;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            border-radius: 8px;
+            overflow: hidden;
+            font-size: 0.9rem;
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            padding: 8px 10px;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .comparison-table th {
+            background-color: #363636;
+            color: white;
+            font-weight: 600;
+        }
+
+        .comparison-table tr:hover {
+            background-color: #f0f7ff;
+        }
+
+        .comparison-table .highlight-row {
+            background-color: #e7f3ff;
+            font-weight: 600;
+        }
+
+        .table-caption {
+            margin: 12px 0 25px 0;
+            padding: 12px 16px;
+            background: linear-gradient(135deg, #f0f4ff 0%, #e8f1ff 100%);
+            /* border-left: 4px solid #2f5ea8; */
+            border-radius: 6px;
+            font-size: 0.94em;
+            line-height: 1.6;
+            color: #1f1f1f;
+            box-shadow: 0 2px 8px rgba(47, 94, 168, 0.1);
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .citation {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 0.875em;
+            margin: 20px 0;
+            border-left: 4px solid #4169E1;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            border: 1px solid #dbdbdb;
+        }
+
+        footer {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+            margin-top: 60px;
+            background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%);
+            border-top: 1px solid #e9ecef;
+        }
+
+        /* Navigation Bar */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            border-bottom: 1px solid rgba(65, 105, 225, 0.1);
+        }
+
+        .navbar nav {
+            display: flex;
+            gap: 0;
+            align-items: center;
+        }
+
+        .navbar a {
+            padding: 12px 20px;
+            color: rgb(128, 128, 128);
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            border-bottom: 3px solid transparent;
+            position: relative;
+        }
+
+        .navbar a:hover {
+            color: orange;
+            border-bottom-color: orange;
+        }
+
+        .navbar a.active {
+            color: red;
+            border-bottom-color: red;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .subtitle {
+                font-size: 1.5em;
+            }
+
+            .section {
+                padding: 20px 15px;
+            }
+
+            .section-alternate {
+                padding: 20px 15px;
+            }
+
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .links {
+                gap: 8px;
+            }
+
+            .btn {
+                padding: 8px 16px;
+                font-size: 0.85em;
+            }
+
+            .container {
+                padding: 0 15px;
+            }
+
+            .navbar nav {
+                gap: 0;
+                overflow-x: auto;
+                width: 100%;
+                justify-content: flex-start;
+            }
+
+            .navbar a {
+                padding: 12px 15px;
+                font-size: 13px;
+                white-space: nowrap;
+            }
+
+            .approach-item {
+                padding: 14px 15px;
+            }
+
+            .approach-item h3 {
+                font-size: 1rem;
+            }
+
+            .approach-number {
+                width: 24px;
+                height: 24px;
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navigation Bar -->
+    <div class="navbar">
+        <nav>
+            <a href="#overview">Overview</a>
+            <a href="#approach">Algorithm</a>
+            <a href="#pretrain">Results</a>
+            <a href="#citation">Citation</a>
+        </nav>
+    </div>
+
+    <header>
+        <div class="container">
+            <h1>One-Step Flow Q-Learning: Addressing the Diffusion Policy Bottleneck in Offline Reinforcement Learning
+            </h1>
+            <div class="subtitle">One Step Flow Q-Learning</div>
+
+            <div class="authors">
+                <span class="author-block"><a href="https://thanhkaist.github.io/" target="_blank">Thanh Nguyen</a>, <a
+                        href="https://sanctusfactory.com/family.php" target="_blank">Chang D. Yoo</a></span>
+            </div>
+
+            <div class="affiliation">
+                <span class="author-block">KAIST</span>
+            </div>
+
+            <div class="links">
+                <span class="link-block">
+                    <a href="https://arxiv.org/abs/2508.13904" class="btn" target="_blank">
+                        <span class="icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                viewBox="0 0 16 16">
+                                <path
+                                    d="M5.5 7a.5.5 0 0 0 0 1h5a.5.5 0 0 0 0-1h-5zM5 9.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2a.5.5 0 0 1-.5-.5z" />
+                                <path
+                                    d="M9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4.5L9.5 0zm0 1v2A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5z" />
+                            </svg>
+                        </span>
+                        <span>arXiv</span>
+                    </a>
+                </span>
+                <span class="link-block">
+                    <a href="https://github.com/" class="btn" target="_blank">
+                        <span class="icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                viewBox="0 0 16 16">
+                                <path
+                                    d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z" />
+                            </svg>
+                        </span>
+                        <span>Code</span>
+                    </a>
+                </span>
+            </div>
+        </div>
+    </header>
+
+
+    <hr class="gradient-divider">
+
+    <!-- TL;DR Section -->
+    <section class="section">
+        <div class="container">
+            <div class="content">
+                <div class="tldr">
+                    <strong>TL;DR:</strong> One-Step Flow Q-Learning (OFQL) replaces the slow, multi-step denoising
+                    process in Diffusion Q-Learning with a direct one-step action generation method by learning an
+                    average velocity field. This eliminates the need for auxiliary modules or distillation, leading to
+                    faster, more stable training and inference while achieving state-of-the-art performance on
+                    D4RL—outperforming even multi-step diffusion policies.
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <hr class="gradient-divider">
+
+    <!-- Abstract Figure -->
+    <section id="overview" class="section-white">
+        <div class="container">
+            <h2>Overview</h2>
+            <div class="content">
+                <div class="media-container">
+                    <img src="images/abstract_image_page.png" alt="DMPO Overview">
+
+                    <div class="caption">
+
+                    </div>From inefficient training and suboptimal performance of multi-step denoising to fast,
+                    high-performance one-step action generation. From left to right: (a) Multi-step diffusion policies
+                    require 20–100 denoising steps, resulting in slow inference and training, and further rely on
+                    backpropagation through time, which can lead to suboptimal performance. (b) OFQL enables one-step
+                    action generation while still capturing complex action distributions, allowing for fast inference
+                    and stable training without distillation or complicated multi-stage procedures. (c) OFQL achieves
+                    state-of-the-art performance on D4RL benchmarks, outperforming multi-step diffusion policies while
+                    being significantly faster in both training and inference.
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <hr class="gradient-divider">
+
+    <!-- Approach Overview -->
+    <section id="approach" class="section-alternate">
+        <div class="container">
+            <h2>Algorithm Overview</h2>
+            <div class="content">
+                <p>Three key components of OFQL:</p>
+
+                <ul class="approach-list">
+                    <li class="approach-item">
+                        <h3><span class="approach-number">1</span>One-Step Policy Modeling via Average Velocity Field
+                        </h3>
+                        <p>Multi-step sampling in diffusion and flow-based policies introduces significant latency,
+                            while distillation-based one-step methods rely on complex training pipelines. Leveraging the
+                            MeanFlow identity, OFQL learns an average velocity field that directly approximates the flow
+                            endpoint in a single step—without distillation. This enables fast inference and eliminates
+                            the need for backpropagation through time.</p>
+                    </li>
+
+                    <li class="approach-item">
+                        <h3><span class="approach-number">2</span>Behavior-Regularized Q-Learning</h3>
+                        <p>OFQL builds on behavior-regularized Q-learning for offline reinforcement learning with
+                            one-step action generation. The Q-function is optimized via temporal-difference learning,
+                            while the policy maximizes the learned critic under an implicit constraint that keeps it
+                            close to the behavior policy, resulting in stable and efficient learning.</p>
+                    </li>
+
+                    <li class="approach-item">
+                        <h3><span class="approach-number">3</span>Surpassing Behavior-Policy Performance</h3>
+                        <p>Pure imitation learning is fundamentally limited by dataset quality and cannot exceed
+                            behavior-policy performance. OFQL addresses this limitation through Q-learning, enabling
+                            performance beyond the behavior policy while maintaining stability in the offline setting.
+                        </p>
+                    </li>
+                </ul>
+                <!-- 
+                <div class="media-container">
+                    <img src="images/DMPO-Framework.png" alt="DMPO Framework">
+                    <div class="caption">
+                        DMPO Framework Overview. Stage 1 (Top & Middle): Pre-training with dispersive MeanFlow. MeanFlow learns velocity fields that transform noise into actions via Vision Transformer encoding with dispersive losses to prevent representation collapse. Stage 2 (Bottom): PPO fine-tuning formulated as a two-layer policy factorization.
+                    </div>
+                </div> -->
+
+                <!-- <h3>Our Contributions</h3>
+                <ul>
+                    <li><strong>Framework:</strong> We introduce DMPO, a unified framework enabling stable one-step generation via principled co-design of architecture and algorithms, with 5-20× speedup over multi-step baselines.</li>
+                    <li><strong>Theory:</strong> We establish the first information-theoretic foundation proving dispersive regularization is necessary for stable one-step generation, and derive the first mathematical formulation for RL fine-tuning of one-step policies.</li>
+                    <li><strong>Validation:</strong> We achieve state-of-the-art on RoboMimic and OpenAI Gym benchmarks, and validate real-time control (>120Hz) on a Franka robot.</li>
+                </ul> -->
+            </div>
+        </div>
+    </section>
+
+    <hr class="gradient-divider">
+
+    <!-- Pre-training Results -->
+    <section id="pretrain" class="section">
+        <div class="container">
+            <h2>Experimental Results</h2>
+            <div class="content">
+                <div class="research-question">
+                    RQ1: Can one-step generation match or exceed multi-step diffusion policies while achieving faster
+                    inference?
+                </div>
+
+                <p><strong>Answer:</strong> Yes. OFQL achieves dramatic inference efficiency gains with true one-step
+                    generation:</p>
+
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th rowspan="2">Dataset</th>
+                            <th colspan="3">Non-Diffusion Policies</th>
+                            <th colspan="2">Diffusion Planners</th>
+                            <th colspan="3">Multi-step Diffusion Policies</th>
+                            <th colspan="2">One-step Flow Policies</th>
+                        </tr>
+                        <tr>
+                            <th>BC</th>
+                            <th>TD3-BC</th>
+                            <th>IQL</th>
+                            <th>Diffuser</th>
+                            <th>DD</th>
+                            <th>EDP</th>
+                            <th>IDQL</th>
+                            <th>DQL</th>
+                            <th>FQL</th>
+                            <th>OFQL (Ours)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+
+                        <!-- Medium-Expert -->
+                        <tr>
+                            <td>HalfCheetah-Medium-Expert</td>
+                            <td>55.2</td>
+                            <td>90.7</td>
+                            <td>86.7</td>
+                            <td>90.3 ± 0.1</td>
+                            <td>88.9 ± 1.9</td>
+                            <td>95.8 ± 0.1</td>
+                            <td>91.3 ± 0.6</td>
+                            <td>96.8 ± 0.3</td>
+                            <td><b>99.8 ± 0.1</b></td>
+                            <td>95.2 ± 0.4</td>
+                        </tr>
+                        <tr>
+                            <td>Hopper-Medium-Expert</td>
+                            <td>52.5</td>
+                            <td>98.0</td>
+                            <td>91.5</td>
+                            <td>107.2 ± 0.9</td>
+                            <td>110.4 ± 0.6</td>
+                            <td>110.8 ± 0.4</td>
+                            <td>110.1 ± 0.7</td>
+                            <td><b>111.1 ± 1.3</b></td>
+                            <td>86.2 ± 1.3</td>
+                            <td>110.2 ± 1.3</td>
+                        </tr>
+                        <tr>
+                            <td>Walker2d-Medium-Expert</td>
+                            <td>107.5</td>
+                            <td>110.1</td>
+                            <td>109.6</td>
+                            <td>107.4 ± 0.1</td>
+                            <td>108.4 ± 0.1</td>
+                            <td>110.4 ± 0.0</td>
+                            <td>110.6 ± 0.0</td>
+                            <td>110.1 ± 0.3</td>
+                            <td>100.5 ± 0.1</td>
+                            <td><b>113.0 ± 0.1</b></td>
+                        </tr>
+
+                        <!-- Medium -->
+                        <tr>
+                            <td>HalfCheetah-Medium</td>
+                            <td>42.6</td>
+                            <td>48.3</td>
+                            <td>47.4</td>
+                            <td>43.8 ± 0.1</td>
+                            <td>45.3 ± 0.3</td>
+                            <td>50.8 ± 0.0</td>
+                            <td>51.5 ± 0.1</td>
+                            <td>51.1 ± 0.5</td>
+                            <td>60.1 ± 0.1</td>
+                            <td><b>63.8 ± 0.1</b></td>
+                        </tr>
+                        <tr>
+                            <td>Hopper-Medium</td>
+                            <td>52.9</td>
+                            <td>59.3</td>
+                            <td>66.3</td>
+                            <td>89.5 ± 0.7</td>
+                            <td>98.2 ± 0.1</td>
+                            <td>72.6 ± 0.2</td>
+                            <td>70.1 ± 2.0</td>
+                            <td>90.5 ± 4.6</td>
+                            <td>74.5 ± 0.2</td>
+                            <td><b>103.6 ± 0.1</b></td>
+                        </tr>
+                        <tr>
+                            <td>Walker2d-Medium</td>
+                            <td>75.3</td>
+                            <td>83.7</td>
+                            <td>78.3</td>
+                            <td>79.4 ± 1.0</td>
+                            <td>79.6 ± 0.9</td>
+                            <td>86.5 ± 0.2</td>
+                            <td><b>88.1 ± 0.4</b></td>
+                            <td>87.0 ± 0.9</td>
+                            <td>72.7 ± 0.8</td>
+                            <td>87.4 ± 0.1</td>
+                        </tr>
+
+                        <!-- Medium-Replay -->
+                        <tr>
+                            <td>HalfCheetah-Medium-Replay</td>
+                            <td>36.6</td>
+                            <td>44.6</td>
+                            <td>44.2</td>
+                            <td>36.0 ± 0.7</td>
+                            <td>42.9 ± 0.1</td>
+                            <td>44.9 ± 0.4</td>
+                            <td>46.5 ± 0.3</td>
+                            <td>47.8 ± 0.3</td>
+                            <td>51.1 ± 0.1</td>
+                            <td><b>51.2 ± 0.1</b></td>
+                        </tr>
+                        <tr>
+                            <td>Hopper-Medium-Replay</td>
+                            <td>18.1</td>
+                            <td>60.9</td>
+                            <td>94.7</td>
+                            <td>91.8 ± 0.5</td>
+                            <td>99.2 ± 0.2</td>
+                            <td>83.0 ± 1.7</td>
+                            <td>99.4 ± 0.1</td>
+                            <td>101.3 ± 0.6</td>
+                            <td>85.4 ± 0.5</td>
+                            <td><b>101.9 ± 0.7</b></td>
+                        </tr>
+                        <tr>
+                            <td>Walker2d-Medium-Replay</td>
+                            <td>26.0</td>
+                            <td>81.8</td>
+                            <td>73.9</td>
+                            <td>58.3 ± 1.8</td>
+                            <td>75.6 ± 0.6</td>
+                            <td>87.0 ± 2.6</td>
+                            <td>89.1 ± 2.4</td>
+                            <td>95.5 ± 1.5</td>
+                            <td>82.1 ± 1.2</td>
+                            <td><b>106.2 ± 0.6</b></td>
+                        </tr>
+
+                        <!-- Averages -->
+                        <tr class="highlight-row">
+                            <td><b>Average (MuJoCo)</b></td>
+                            <td>51.9</td>
+                            <td>75.3</td>
+                            <td>77.0</td>
+                            <td>78.2</td>
+                            <td>83.2</td>
+                            <td>82.4</td>
+                            <td>84.1</td>
+                            <td>87.9</td>
+                            <td>79.2</td>
+                            <td><b>92.5</b></td>
+                        </tr>
+
+                        <!-- AntMaze -->
+                        <tr>
+                            <td>AntMaze-Medium-Play</td>
+                            <td>0.0</td>
+                            <td>10.6</td>
+                            <td>71.2</td>
+                            <td>6.7 ± 5.7</td>
+                            <td>8.0 ± 4.3</td>
+                            <td>73.3 ± 6.2</td>
+                            <td>67.3 ± 5.7</td>
+                            <td>76.6 ± 10.8</td>
+                            <td>78.0 ± 7.0</td>
+                            <td><b>88.1 ± 5.0</b></td>
+                        </tr>
+                        <tr>
+                            <td>AntMaze-Large-Play</td>
+                            <td>0.0</td>
+                            <td>0.2</td>
+                            <td>39.6</td>
+                            <td>17.3 ± 1.9</td>
+                            <td>0.0 ± 0.0</td>
+                            <td>33.3 ± 1.9</td>
+                            <td>48.7 ± 4.7</td>
+                            <td>46.4 ± 8.3</td>
+                            <td>84.0 ± 7.0</td>
+                            <td><b>84.0 ± 6.1</b></td>
+                        </tr>
+                        <tr>
+                            <td>AntMaze-Medium-Diverse</td>
+                            <td>0.8</td>
+                            <td>3.0</td>
+                            <td>70.0</td>
+                            <td>2.0 ± 1.6</td>
+                            <td>4.0 ± 2.8</td>
+                            <td>52.7 ± 1.9</td>
+                            <td>83.3 ± 5.0</td>
+                            <td>78.6 ± 10.3</td>
+                            <td>71.0 ± 13.0</td>
+                            <td><b>90.2 ± 4.2</b></td>
+                        </tr>
+                        <tr>
+                            <td>AntMaze-Large-Diverse</td>
+                            <td>0.0</td>
+                            <td>0.0</td>
+                            <td>47.5</td>
+                            <td>27.3 ± 2.4</td>
+                            <td>0.0 ± 0.0</td>
+                            <td>41.3 ± 3.4</td>
+                            <td>40.0 ± 11.4</td>
+                            <td>56.6 ± 7.6</td>
+                            <td><b>83.0 ± 4.0</b></td>
+                            <td>76.1 ± 6.6</td>
+                        </tr>
+
+                        <tr class="highlight-row">
+                            <td><b>Average (AntMaze)</b></td>
+                            <td>0.2</td>
+                            <td>3.5</td>
+                            <td>57.1</td>
+                            <td>13.3</td>
+                            <td>3.0</td>
+                            <td>50.2</td>
+                            <td>59.8</td>
+                            <td>64.6</td>
+                            <td>79.0</td>
+                            <td><b>84.6</b></td>
+                        </tr>
+
+                        <!-- Kitchen -->
+                        <tr>
+                            <td>Kitchen-Mixed</td>
+                            <td>51.5</td>
+                            <td>0.0</td>
+                            <td>51.0</td>
+                            <td>52.5 ± 2.5</td>
+                            <td><b>75.0 ± 0.0</b></td>
+                            <td>50.2 ± 1.8</td>
+                            <td>60.5 ± 4.1</td>
+                            <td>62.6 ± 5.1</td>
+                            <td>50.5 ± 1.6</td>
+                            <td>69.0 ± 1.5</td>
+                        </tr>
+                        <tr>
+                            <td>Kitchen-Partial</td>
+                            <td>38.0</td>
+                            <td>0.0</td>
+                            <td>46.3</td>
+                            <td>55.7 ± 1.3</td>
+                            <td>56.5 ± 5.8</td>
+                            <td>40.8 ± 1.5</td>
+                            <td><b>66.7 ± 2.5</b></td>
+                            <td>60.5 ± 6.9</td>
+                            <td>55.7 ± 2.5</td>
+                            <td>65.0 ± 2.3</td>
+                        </tr>
+
+                        <tr class="highlight-row">
+                            <td><b>Average (Kitchen)</b></td>
+                            <td>44.8</td>
+                            <td>0.0</td>
+                            <td>48.7</td>
+                            <td>54.1</td>
+                            <td>65.8</td>
+                            <td>45.5</td>
+                            <td>66.6</td>
+                            <td>61.6</td>
+                            <td>53.1</td>
+                            <td><b>67.0</b></td>
+                        </tr>
+
+                    </tbody>
+                </table>
+
+                <div class="research-question">
+                    RQ2: How does OFQL perform compared to other efficient
+                    methods?
+                </div>
+
+
+                <p><strong>Answer:</strong> Yes. OFQL achieves competitive or superior performance compared to other
+                    efficient methods with only 1 denoising step:</p>
+
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Method (Steps)</th>
+                            <th>DQL (5)</th>
+                            <th>DQL+DDIM (1)</th>
+                            <th>FBRAC (1)</th>
+                            <th>FQL (1)</th>
+                            <th>OFQL (1)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><b>Score</b></td>
+                            <td>87.9</td>
+                            <td>11.6 <span style="color:red;">(-76.3)</span></td>
+                            <td>67.1 <span style="color:red;">(-20.8)</span></td>
+                            <td>79.2 <span style="color:red;">(-8.7)</span></td>
+                            <td class="highlight-row">92.6 <span style="color:green;">(+4.7)</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p class="table-caption">
+                    <strong>Table:</strong> Comparison of OFQL with other efficient one-step methods on D4RL benchmarks.
+                    OFQL achieves competitive or superior performance with only 1 denoising step, while other methods
+                    suffer significant performance drops.
+                </p>
+
+                <div class="research-question">
+                    RQ3: Can OFQL preserve the expressive power of the diffusion/flow model?
+                </div>
+
+                <p><strong>Answer:</strong> Yes. OFQL preserves the expressive power of the diffusion/flow model while
+                    achieving efficient performance.</p>
+
+
+                <div class="media-container">
+                    <img src="images/expressive_comparison.png" alt="RoboMimic Fine-tuning Results">
+                    <p class="table-caption">
+                        Comparison of distribution modeling capabilities between FM with marginal velocity
+                        parameterization (left; evaluated at 1,2,5,10 steps generation) and average velocity
+                        parameterization (right; evaluated with one-step generation) on a toy dataset with complex
+                        multi-modal structure.
+                    </p>
+                </div>
+
+                <div class="research-question">
+                    RQ4: Where I can find more results?
+                </div>
+                <p><strong>Answer:</strong> Please visit our paper for more experimental results.</p>
+
+            </div>
+        </div>
+    </section>
+
+    <hr class="gradient-divider">
+    <!-- Citation -->
+    <section id="citation" class="section">
+        <div class="container">
+            <h2>Citation</h2>
+            <div class="content">
+                <div class="citation">@inproceedings{nguyenone,
+                        title={One-Step Flow Q-Learning: Addressing the Diffusion Policy Bottleneck in Offline Reinforcement Learning},
+                        author={Nguyen, Thanh Xuan and Yoo, Chang D},
+                        booktitle={The Fourteenth International Conference on Learning Representations},
+                        year={2026},
+                        url={https://arxiv.org/abs/2508.13904},
+                }
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 OFQL Project. All rights reserved.</p>
+        </div>
+    </footer>
+</body>
+
+</html>
