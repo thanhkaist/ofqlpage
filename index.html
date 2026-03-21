@@ -5,8 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description"
-        content="DMPO: Dispersive MeanFlow Policy Optimization - One Step Is Enough for Real-Time Robotic Control">
-    <title>DMPO: Dispersive MeanFlow Policy Optimization</title>
+        content="One-Step Flow Q-Learning (OFQL) replaces the slow, multi-step denoising process in Diffusion Q-Learning with a direct one-step action generation method by learning an average velocity field. This eliminates the need for auxiliary modules or distillation, leading to faster, more stable training and inference while achieving state-of-the-art performance on D4RL—outperforming even multi-step diffusion policies.">
+    <title>OFQL: One-Step Flow Q-Learning</title>
     <style>
         * {
             margin: 0;
@@ -277,15 +277,15 @@
         }
 
         .research-question {
-            color: #c7254e;
+            color: #0056b3; /* Changed to a deeper blue for better visibility */
             font-weight: 700;
             font-size: 1.15em;
             margin: 25px 0 15px 0;
             padding: 18px 22px;
-            background: linear-gradient(135deg, #fff5f5 0%, #ffe5e5 100%);
-            border-left: 4px solid #c7254e;
+            background: linear-gradient(135deg, #e0f7fa 0%, #b2ebf2 100%); /* Changed to a lighter gradient */
+            border-left: 4px solid #0056b3;
             border-radius: 6px;
-            box-shadow: 0 2px 8px rgba(199, 37, 78, 0.1);
+            box-shadow: 0 2px 8px rgba(0, 86, 179, 0.1);
         }
 
         .media-container {
@@ -673,7 +673,7 @@
             <h2>Overview</h2>
             <div class="content">
                 <div class="media-container">
-                    <img src="images/abstract_image_page.png" alt="DMPO Overview">
+                    <img src="images/abstract_image_page.png" alt="OFQL Overview">
 
                     <div class="caption">
 
@@ -726,20 +726,6 @@
                         </p>
                     </li>
                 </ul>
-                <!-- 
-                <div class="media-container">
-                    <img src="images/DMPO-Framework.png" alt="DMPO Framework">
-                    <div class="caption">
-                        DMPO Framework Overview. Stage 1 (Top & Middle): Pre-training with dispersive MeanFlow. MeanFlow learns velocity fields that transform noise into actions via Vision Transformer encoding with dispersive losses to prevent representation collapse. Stage 2 (Bottom): PPO fine-tuning formulated as a two-layer policy factorization.
-                    </div>
-                </div> -->
-
-                <!-- <h3>Our Contributions</h3>
-                <ul>
-                    <li><strong>Framework:</strong> We introduce DMPO, a unified framework enabling stable one-step generation via principled co-design of architecture and algorithms, with 5-20× speedup over multi-step baselines.</li>
-                    <li><strong>Theory:</strong> We establish the first information-theoretic foundation proving dispersive regularization is necessary for stable one-step generation, and derive the first mathematical formulation for RL fine-tuning of one-step policies.</li>
-                    <li><strong>Validation:</strong> We achieve state-of-the-art on RoboMimic and OpenAI Gym benchmarks, and validate real-time control (>120Hz) on a Franka robot.</li>
-                </ul> -->
             </div>
         </div>
     </section>
@@ -752,12 +738,15 @@
             <h2>Experimental Results</h2>
             <div class="content">
                 <div class="research-question">
-                    RQ1: Can one-step generation match or exceed multi-step diffusion policies while achieving faster
+                    Q1: Can one-step generation match or exceed multi-step diffusion policies while achieving faster
                     inference?
                 </div>
 
-                <p><strong>Answer:</strong> Yes. OFQL achieves dramatic inference efficiency gains with true one-step
-                    generation:</p>
+                <p><strong>Answer:</strong> Yes. OFQL not only matches but exceeds multi-step diffusion policies while enabling faster one-step inference.
+
+Across benchmarks, OFQL consistently outperforms DQL and other diffusion-based methods: +4.6 on MuJoCo (87.9 → 92.5), +20.0 on AntMaze (64.6 → 84.6), and +5.4 on Kitchen (61.6 → 67.0). It also significantly surpasses one-step baselines like FQL.
+
+These gains stem from (1) expressive one-step policy modeling that captures complex action distributions, and (2) more stable Q-learning by avoiding backpropagation through time.</p>
 
                 <table class="comparison-table">
                     <thead>
@@ -1035,13 +1024,11 @@
                 </table>
 
                 <div class="research-question">
-                    RQ2: How does OFQL perform compared to other efficient
-                    methods?
+                    Q2: How does OFQL perform compared to other Strategies Toward One-Step Prediction.?
                 </div>
 
 
-                <p><strong>Answer:</strong> Yes. OFQL achieves competitive or superior performance compared to other
-                    efficient methods with only 1 denoising step:</p>
+                <p><strong>Answer:</strong> OFQL outperforms all existing strategies for one-step prediction. Naïvely reducing DQL to one step using DDIM leads to a severe performance drop (−76.3), while FBRAC (−20.8) and FQL (−8.7), utilizing Flow Matching, partially mitigate this but still underperform DQL. In contrast, OFQL not only avoids this degradation but surpasses DQL itself by +4.7, demonstrating that it is the only method that achieves both efficient one-step sampling and superior performance.</p>
 
                 <table class="comparison-table">
                     <thead>
@@ -1072,7 +1059,7 @@
                 </p>
 
                 <div class="research-question">
-                    RQ3: Can OFQL preserve the expressive power of the diffusion/flow model?
+                    Q3: Can OFQL preserve the expressive power of the diffusion/flow model?
                 </div>
 
                 <p><strong>Answer:</strong> Yes. OFQL preserves the expressive power of the diffusion/flow model while
@@ -1090,7 +1077,7 @@
                 </div>
 
                 <div class="research-question">
-                    RQ4: Where I can find more results?
+                    Q4: Where I can find more results?
                 </div>
                 <p><strong>Answer:</strong> Please visit our paper for more experimental results.</p>
 
