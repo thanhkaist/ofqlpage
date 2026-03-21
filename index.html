@@ -446,6 +446,41 @@
             font-weight: 600;
         }
 
+        .table-toggle-container {
+            display: flex;
+            justify-content: flex-end;
+            margin: 8px 0 10px;
+        }
+
+        .table-toggle-btn {
+            border: 1px solid #2f5ea8;
+            background: #ffffff;
+            color: #2f5ea8;
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 0.86rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .table-toggle-btn:hover {
+            background: #2f5ea8;
+            color: #ffffff;
+        }
+
+        .comparison-table.average-collapsed tbody tr {
+            display: none;
+        }
+
+        .comparison-table.average-collapsed tbody tr.highlight-row {
+            display: table-row;
+        }
+
+        .comparison-table.average-collapsed.expanded tbody tr {
+            display: table-row;
+        }
+
         .table-caption {
             margin: 12px 0 25px 0;
             padding: 12px 16px;
@@ -460,17 +495,63 @@
             font-weight: 600;
         }
 
-        .citation {
-            background: #f5f5f5;
-            padding: 20px;
-            border-radius: 6px;
-            font-family: monospace;
-            font-size: 0.875em;
+        .citation-wrapper {
             margin: 20px 0;
-            border-left: 4px solid #4169E1;
-            overflow-x: auto;
-            white-space: pre-wrap;
             border: 1px solid #dbdbdb;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+        }
+
+        .citation-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 10px 14px;
+            background: linear-gradient(135deg, #f5f7fb 0%, #ebf2ff 100%);
+            border-bottom: 1px solid #dbe4f2;
+        }
+
+        .citation-title {
+            font-size: 0.88rem;
+            color: #2f5ea8;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+        }
+
+        .copy-citation-btn {
+            border: 1px solid #2f5ea8;
+            background: #fff;
+            color: #2f5ea8;
+            border-radius: 6px;
+            padding: 4px 10px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .copy-citation-btn:hover {
+            background: #2f5ea8;
+            color: #fff;
+        }
+
+        .citation {
+            margin: 0;
+            background: #f8f9fb;
+            border-left: 4px solid #4169E1;
+            padding: 16px;
+        }
+
+        .citation pre {
+            margin: 0;
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+            font-size: 0.88em;
+            line-height: 1.65;
+            color: #1f1f1f;
+            overflow-x: auto;
+            white-space: pre;
         }
 
         footer {
@@ -676,15 +757,15 @@
                     <img src="images/abstract_image_page.png" alt="OFQL Overview">
 
                     <div class="caption">
-
-                    </div>From inefficient training and suboptimal performance of multi-step denoising to fast,
+                    From inefficient training and suboptimal performance of multi-step denoising to fast,
                     high-performance one-step action generation. From left to right: (a) Multi-step diffusion policies
-                    require 20–100 denoising steps, resulting in slow inference and training, and further rely on
+                    require 5–100 denoising steps, resulting in slow inference and training, and further rely on
                     backpropagation through time, which can lead to suboptimal performance. (b) OFQL enables one-step
                     action generation while still capturing complex action distributions, allowing for fast inference
                     and stable training without distillation or complicated multi-stage procedures. (c) OFQL achieves
                     state-of-the-art performance on D4RL benchmarks, outperforming multi-step diffusion policies while
                     being significantly faster in both training and inference.
+                    </div>
                 </div>
             </div>
         </div>
@@ -748,7 +829,14 @@ Across benchmarks, OFQL consistently outperforms DQL and other diffusion-based m
 
 These gains stem from (1) expressive one-step policy modeling that captures complex action distributions, and (2) more stable Q-learning by avoiding backpropagation through time.</p>
 
-                <table class="comparison-table">
+                <div class="table-toggle-container">
+                    <button class="table-toggle-btn" type="button" data-target-table="main-results-table"
+                        aria-expanded="false">
+                        Show all result rows
+                    </button>
+                </div>
+
+                <table id="main-results-table" class="comparison-table average-collapsed">
                     <thead>
                         <tr>
                             <th rowspan="2">Dataset</th>
@@ -1022,6 +1110,11 @@ These gains stem from (1) expressive one-step policy modeling that captures comp
 
                     </tbody>
                 </table>
+                <p class="table-caption">
+                    <strong>Table:</strong> Comparison of OFQL with other efficient one-step methods on D4RL benchmarks.
+                    OFQL achieves competitive or superior performance with only 1 denoising step compared to DQL, while other methods
+                    suffer significant performance drops.
+                </p>
 
                 <div class="research-question">
                     Q2: How does OFQL perform compared to other Strategies Toward One-Step Prediction.?
@@ -1069,7 +1162,7 @@ These gains stem from (1) expressive one-step policy modeling that captures comp
                 <div class="media-container">
                     <img src="images/expressive_comparison.png" alt="RoboMimic Fine-tuning Results">
                     <p class="table-caption">
-                        Comparison of distribution modeling capabilities between FM with marginal velocity
+                        <strong>Figure:</strong> Comparison of distribution modeling capabilities between FM with marginal velocity
                         parameterization (left; evaluated at 1,2,5,10 steps generation) and average velocity
                         parameterization (right; evaluated with one-step generation) on a toy dataset with complex
                         multi-modal structure.
@@ -1091,13 +1184,20 @@ These gains stem from (1) expressive one-step policy modeling that captures comp
         <div class="container">
             <h2>Citation</h2>
             <div class="content">
-                <div class="citation">@inproceedings{nguyenone,
-                        title={One-Step Flow Q-Learning: Addressing the Diffusion Policy Bottleneck in Offline Reinforcement Learning},
-                        author={Nguyen, Thanh Xuan and Yoo, Chang D},
-                        booktitle={The Fourteenth International Conference on Learning Representations},
-                        year={2026},
-                        url={https://arxiv.org/abs/2508.13904},
-                }
+                <div class="citation-wrapper">
+                    <div class="citation-header">
+                        <span class="citation-title">BibTeX</span>
+                        <button class="copy-citation-btn" type="button" id="copy-citation-btn">Copy</button>
+                    </div>
+                    <div class="citation">
+                        <pre id="citation-text">@inproceedings{nguyenone,
+  title={One-Step Flow Q-Learning: Addressing the Diffusion Policy Bottleneck in Offline Reinforcement Learning},
+  author={Nguyen, Thanh Xuan and Yoo, Chang D},
+  booktitle={The Fourteenth International Conference on Learning Representations},
+  year={2026},
+  url={https://arxiv.org/abs/2508.13904},
+}</pre>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1110,6 +1210,36 @@ These gains stem from (1) expressive one-step policy modeling that captures comp
             <p>&copy; 2026 OFQL Project. All rights reserved.</p>
         </div>
     </footer>
+
+    <script>
+        document.querySelectorAll('.table-toggle-btn').forEach(function (button) {
+            button.addEventListener('click', function () {
+                var tableId = button.getAttribute('data-target-table');
+                var table = document.getElementById(tableId);
+                if (!table) {
+                    return;
+                }
+
+                var expanded = table.classList.toggle('expanded');
+                button.setAttribute('aria-expanded', String(expanded));
+                button.textContent = expanded ? 'Hide detailed rows' : 'Show all result rows';
+            });
+        });
+
+        var copyCitationBtn = document.getElementById('copy-citation-btn');
+        var citationText = document.getElementById('citation-text');
+
+        if (copyCitationBtn && citationText) {
+            copyCitationBtn.addEventListener('click', function () {
+                navigator.clipboard.writeText(citationText.textContent).then(function () {
+                    copyCitationBtn.textContent = 'Copied';
+                    setTimeout(function () {
+                        copyCitationBtn.textContent = 'Copy';
+                    }, 1200);
+                });
+            });
+        }
+    </script>
 </body>
 
 </html>
